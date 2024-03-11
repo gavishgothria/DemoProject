@@ -1,0 +1,169 @@
+import streamlit as st
+import pandas as pd
+import streamlit as st
+from streamlit_extras.app_logo import add_logo
+import tempfile
+import os
+# from backend.askbi_chromadb import AskBI_Chroma
+
+# chroma = AskBI_Chroma()
+# add kitten logo
+def add_logo():
+    st.markdown(
+        """
+        <style>
+            [data-testid="stSidebarNav"] {
+                background-image: url(https://www.prodapt.com/wp-content/uploads/Logo-for-website.svg);
+                background-repeat: no-repeat;
+                background-size: 200px;
+                background-position: 20px 20px;
+            }
+            [data-testid="stSidebarNav"]::before {
+                margin-left: 20px;
+                margin-top: 20px;
+                font-size: 30px;
+                position: relative;
+                top: 100px;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+add_logo()
+# logo_path = "https://www.prodapt.com/wp-content/uploads/Logo-for-website.svg"
+
+
+st.title("AskBI-🤖")
+# Create empty DataFrame to store user data
+def func():
+    st.title("Admin Page")
+
+    data = pd.DataFrame(columns=["Column 1", "Column 2"])
+    # Create columns for user input
+    col1, col2 = st.columns([1,3])
+
+    # Collect user input
+    user_input_1 = col1.text_input("Enter value for Column 1")
+    user_input_2 = col2.text_input("Enter value for Column 2")
+
+    # Submit button
+    submit_button = st.button("Submit")
+
+    # Check if data exists in session state and retrieve it
+    if "user_data" in st.session_state:
+        # Retrieve data from session state
+        data = st.session_state["user_data"]
+    else:
+        # Data doesn't exist, initialize an empty DataFrame
+        data = pd.DataFrame(columns=["Column 1", "Column 2"])
+
+    # Update data DataFrame based on user input (if submit button is pressed)
+    if submit_button:
+        # Create dictionary from user input
+        user_data = {"Column 1": user_input_1, "Column 2": user_input_2}
+
+        # Append the new data to the existing DataFrame
+        data = data.append(user_data, ignore_index=True)
+
+        # Store updated DataFrame in session state
+        st.session_state["user_data"] = data
+        st.success("Data saved in session state!")
+    c1, c2 = st.columns(2)
+    # Display current data (optional)
+    with c1:
+        st.header("Current Data")
+        data = {
+            "Tablename": [
+                "Orders",
+                "Customers",
+                "Services",
+                "Order_History"
+            ],
+            "TableContext": [
+                "This table stores information about customer orders, including order ID, customer ID, service ID, order date, expected activation date, status, and additional information.\n Valid values of status columns are open,in-progress,done.\n Remember Always use the table name orders along with dataset name like genai_sample_dataset.Orders in the given case. Do not use only the table name in queries. Do not change the case of dataset or table names",
+                "This table stores information about customers, including customer ID, name, contact number, email, and address.\nThere is no first name or last name, so when user ask for customer name, you should respond with name column.\nAlways use the table name orders along with dataset name like genai_sample_dataset.Customers in the given case. Do not use only the table name in queries. Do not change the case of dataset or table names",
+                "This table stores information about services offered, including service ID, service name, description, and price.\nAlways use the table name orders along with dataset name like genai_sample_dataset.Services in the given case. Do not use only the table name in queries. Do not change the case of dataset or table names",
+                "This table tracks the history of orders, including history ID, order ID, timestamp, event type, and details.\nAlways use the table name orders along with dataset name like genai_sample_dataset.Order_History in the given case. Do not use only the table name in queries. Do not change the case of dataset or table names"
+            ]
+        }
+        fk_data = pd.DataFrame(data)
+        st.write(fk_data)  # Display the data
+        download_button = st.download_button("Download Data", data=fk_data.to_csv(), file_name="user_data.csv")
+    with c2:
+        st.header("Upload CSV File for Functional Knowledge Loading")
+        business_knowledge_csv = st.file_uploader("Upload Functional Knowledge CSV File", type=["csv"])
+        if st.button("Load Functional Knowledge"):
+            if business_knowledge_csv is not None:
+                try:
+                    temp_dir = tempfile.mkdtemp()
+                    file_path = os.path.join(temp_dir, business_knowledge_csv.name)
+                    with open(file_path, "wb") as f:
+                        f.write(business_knowledge_csv.read())
+                    chroma.load_business_knowledge_obj_index(file_path)
+                    st.success("Functional knowledge loaded successfully!")
+                except Exception as e:
+                    st.error(f"Error loading functional knowledge: {e}")
+
+is_enabled = st.toggle('Business Knowledge')
+if is_enabled:
+    func()
+else :
+    st.title("Admin Page")
+
+    data = pd.DataFrame(columns=["Column 1", "Column 2"])
+    # Create columns for user input
+    col1, col2 = st.columns([1,3])
+
+    # Collect user input
+    user_input_1 = col1.text_input("Enter value for Column 1")
+    user_input_2 = col2.text_input("Enter value for Column 2")
+
+    # Submit button
+    submit_button = st.button("Submit")
+
+    # Check if data exists in session state and retrieve it
+    if "user_data" in st.session_state:
+        # Retrieve data from session state
+        data = st.session_state["user_data"]
+    else:
+        # Data doesn't exist, initialize an empty DataFrame
+        data = pd.DataFrame(columns=["Column 1", "Column 2"])
+
+    # Update data DataFrame based on user input (if submit button is pressed)
+    if submit_button:
+        # Create dictionary from user input
+        user_data = {"Column 1": user_input_1, "Column 2": user_input_2}
+
+        # Append the new data to the existing DataFrame
+        data = data.append(user_data, ignore_index=True)
+
+        # Store updated DataFrame in session state
+        st.session_state["user_data"] = data
+        st.success("Data saved in session state!")
+    c1, c2 = st.columns(2)
+    # Display current data (optional)
+    with c1:
+        st.header("Current Data")
+        data = {
+            "id": ["1"],
+            "Question": ["What is Sunken cost?"],
+            "Answer": ["Cost paid by the company to the vendor till the customer billing starts"]
+        }
+
+        bk_data = pd.DataFrame(data)
+        st.write(bk_data)  # Display the data
+        download_button = st.download_button("Download Data", data=bk_data.to_csv(), file_name="user_data.csv")
+    with c2:
+        st.header("Upload CSV File for Buisiness Knowledge Loading")
+        business_knowledge_csv = st.file_uploader("Upload Buisiness Knowledge CSV File", type=["csv"])
+        if st.button("Load Buisiness Knowledge"):
+            if business_knowledge_csv is not None:
+                try:
+                    temp_dir = tempfile.mkdtemp()
+                    file_path = os.path.join(temp_dir, business_knowledge_csv.name)
+                    with open(file_path, "wb") as f:
+                        f.write(business_knowledge_csv.read())
+                    chroma.load_business_knowledge_obj_index(file_path)
+                    st.success("Buisiness knowledge loaded successfully!")
+                except Exception as e:
+                    st.error(f"Error loading buisiness knowledge: {e}")
